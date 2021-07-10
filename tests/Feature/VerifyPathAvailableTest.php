@@ -70,6 +70,71 @@ class VerifyPathAvailableTest extends TestCase
     }
 
     /** @test */
+    function it_ignores_a_pre_existing_directory_if_the_force_option_is_specified()
+    {
+        config(['lambo.store.root_path' => '/some/filesystem/path']);
+        config(['lambo.store.project_path' => '/some/filesystem/path/existing-directory']);
+        config(['lambo.store.force_create' => true]);
+
+        File::shouldReceive('isDirectory')
+            ->with('/some/filesystem/path')
+            ->once()
+            ->andReturn(true)
+            ->globally()
+            ->ordered();
+
+        File::shouldReceive('isDirectory')
+            ->with('/some/filesystem/path/existing-directory')
+            ->once()
+            ->andReturn(true)
+            ->globally()
+            ->ordered();
+
+        File::shouldReceive('deleteDirectory')
+            ->with('/some/filesystem/path/existing-directory')
+            ->once()
+            ->andReturn(true)
+            ->globally()
+            ->ordered();
+
+        app(VerifyPathAvailable::class)();
+    }
+
+    /** @test */
+    public function it_throws_a_lambo_exception_if_it_fails_to_delete_the_pre_existing_directory()
+    {
+        config(['lambo.store.root_path' => '/some/filesystem/path']);
+        config(['lambo.store.project_path' => '/some/filesystem/path/existing-directory']);
+        config(['lambo.store.force_create' => true]);
+
+        File::shouldReceive('isDirectory')
+            ->with('/some/filesystem/path')
+            ->once()
+            ->andReturn(true)
+            ->globally()
+            ->ordered();
+
+        File::shouldReceive('isDirectory')
+            ->with('/some/filesystem/path/existing-directory')
+            ->once()
+            ->andReturn(true)
+            ->globally()
+            ->ordered();
+
+        File::shouldReceive('deleteDirectory')
+            ->with('/some/filesystem/path/existing-directory')
+            ->once()
+            ->andReturn(false)
+            ->globally()
+            ->ordered();
+
+        $this->expectException(LamboException::class);
+
+        app(VerifyPathAvailable::class)();
+    }
+
+
+    /** @test */
     function it_throws_an_exception_if_project_path_is_empty()
     {
         config(['lambo.store.root_path' => '/some/filesystem/path']);

@@ -11,7 +11,7 @@ class GetTimezone
         if ($timezone = ini_get('date.timezone')) {
             return $timezone;
         }
-        
+
         return IntlTimeZone::createDefault()->getID();
     }
 }

@@ -11,7 +11,6 @@ abstract class TestCase extends BaseTestCase
     use CreatesApplication;
 
     protected $shell;
-    protected $consoleWriter;
 
     function setUp(): void
     {
@@ -25,7 +24,8 @@ abstract class TestCase extends BaseTestCase
     protected function mockConsoleWriter(): void
     {
         $consoleWriter = $this->mock(ConsoleWriter::class, function ($consoleWriter) {
-            $consoleWriter->shouldReceive('logstep');
+            $consoleWriter->shouldReceive('logStep');
+            $consoleWriter->shouldReceive('title');
             $consoleWriter->shouldReceive('success');
             $consoleWriter->shouldReceive('note');
             $consoleWriter->shouldReceive('text');

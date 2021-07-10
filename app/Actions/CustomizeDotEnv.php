@@ -29,7 +29,7 @@ class CustomizeDotEnv
         $this->consoleWriter->success('.env files configured.');
     }
 
-    public function customize($contents)
+    public function customize($contents): string
     {
         return collect(explode("\n", $contents))->transform(function ($item) {
             $parts = explode('=', $item, 2);

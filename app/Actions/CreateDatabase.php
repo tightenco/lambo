@@ -38,20 +38,21 @@ class CreateDatabase
                 ->create($db_name);
 
             if (! $databaseCreated) {
-                return $this->consoleWriter->warn($this->failureToCreateError($db_name));
+                $this->consoleWriter->warn($this->failureToCreateError($db_name));
             }
         } catch (PDOException $e) {
             $this->consoleWriter->warn($e->getMessage());
-            return $this->consoleWriter->warn($this->failureToCreateError($db_name));
+            $this->consoleWriter->warn($this->failureToCreateError($db_name));
+            return;
         }
 
-        return $this->consoleWriter->success("Created a new database '{$db_name}'");
+        $this->consoleWriter->success("Created a new database '{$db_name}'");
     }
 
     protected function failureToCreateError(string $db_name): string
     {
         return sprintf(
-            "Failed to create database '%s' using credentials <fg=yellow>mysql://%s:****@%s:%s</>\nYou will need to create the database mnually.",
+            "Failed to create database '%s' using credentials <fg=yellow>mysql://%s:****@%s:%s</>\nYou will need to create the database manually.",
             $db_name,
             config('lambo.store.database_username'),
             config('lambo.store.database_host'),

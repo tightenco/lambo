@@ -143,6 +143,13 @@ You can optionally pass one or more of these parameters every time you use Lambo
   lambo new superApplication --path=~/Sites
   ```
 
+- `-f` or `--force` to force install even if the directory already exists 
+
+  ```bash
+  # Creates a new Laravel application after deleting ~/Sites/superApplication  
+  lambo new superApplication --force
+  ```
+  
 - `-d` or `--dev` to choose the `develop` branch instead of `master`, getting the beta install.
 
   ```bash
@@ -221,6 +228,42 @@ You can optionally pass one or more of these parameters every time you use Lambo
   ```bash
   lambo new superApplication --full
 
+## GitHub Repository Creation
+
+- `--github[=<options>]` to create a new GitHub repository and push your new project to it.
+
+```bash
+# Create a new GitHub repository '<your_github_username>/my-app'and make
+# it private with issue tracking and a wiki.
+lambo new my-app --github
+```
+
+Lambo uses the official GitHub command line tool to create your new repository so you must have it installed. You can find installation instructions [here](https://github.com/cli/cli#installation).
+
+New repository creation is configured by providing a value to the `--github` command line option which is then passed directly to the GitHub command line tool. For example, to specify a different visibility you would do the following:
+
+ ```bash
+ lambo new my-app --github='--public'
+ lambo new my-app --github='--internal'
+ ```
+
+and to create a public repository without issue tracking or a wiki you would do the following:
+
+```bash
+ lambo new my-app --github='--public --enable-issues=false --enable-wiki=false'
+```
+
+Please refer to the GitHub command line tool [repository creation documentation](https://cli.github.com/manual/gh_repo_create) for the full list of available options.
+
+**Note:** Lambo always passes the `--confirm` option.
+
+- `--github-org=ORG` to specify under which organisation the new repository will be created.
+
+ ```bash
+# Create a new private GitHub repository 'tighten/my-app' and make
+# it private with issue tracking and a wiki.
+ lambo new my-app --github --github-org=tighten
+ ```
 -----
 
 # For contributors:

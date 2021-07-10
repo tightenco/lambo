@@ -16,29 +16,35 @@ class FakeProcess
         $this->failedCommand = $failedCommand;
     }
 
-    public static function success()
+    public static function success(): FakeProcess
     {
         return new self(true);
     }
 
-    public static function fail(string $failedCommand)
+    public static function fail(string $failedCommand): FakeProcess
     {
         return new self(false, $failedCommand);
     }
 
-    public function isSuccessful()
+    public function isSuccessful(): bool
     {
         return $this->isSuccessful;
     }
 
-    public function getCommandLine()
+    public function getCommandLine(): string
     {
         return $this->failedCommand;
     }
 
-    public function withOutput(string $output)
+    public function withOutput(string $output): FakeProcess
     {
         $this->output = $output;
+        return $this;
+    }
+
+    public function withErrorOutput(string $errorOutput): FakeProcess
+    {
+        $this->errorOutput = $errorOutput;
         return $this;
     }
 

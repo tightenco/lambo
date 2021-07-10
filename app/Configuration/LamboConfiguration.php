@@ -12,6 +12,7 @@ abstract class LamboConfiguration
     public const WITH_OUTPUT = 'with_output';
     public const USE_DEVELOP_BRANCH = 'dev';
     public const CREATE_DATABASE = 'create_database';
+    public const FORCE_CREATE = 'force_create';
     public const MIGRATE_DATABASE = 'migrate_database';
     public const DATABASE_HOST = 'database_host';
     public const DATABASE_PORT = 'database_port';
@@ -22,12 +23,18 @@ abstract class LamboConfiguration
     public const FULL = 'full';
     public const TLD = 'tld';
     public const COMMIT_MESSAGE = 'commit_message';
+    public const BRANCH = 'branch';
     public const VALET_LINK = 'valet_link';
     public const VALET_SECURE = 'valet_secure';
     public const BROWSER = 'browser';
     public const INERTIA = 'inertia';
     public const LIVEWIRE = 'livewire';
     public const TEAMS = 'teams';
+    public const INITIALIZE_GITHUB = 'initialize_github';
+    public const GITHUB_PUBLIC = 'github_public';
+    public const GITHUB_DESCRIPTION = 'github_description';
+    public const GITHUB_HOMEPAGE = 'github_homepage';
+    public const GITHUB_ORGANIZATION = 'github_organization';
     public const COMMAND = 'command';
 
     public function __construct(array $keyMap)
@@ -37,11 +44,6 @@ abstract class LamboConfiguration
         collect($keyMap)->each(function ($item, $key) use ($settings) {
             $this->$item = $this->get($key, $settings);
         });
-    }
-
-    public function __get($name)
-    {
-        return null;
     }
 
     abstract protected function getSettings(): array;
@@ -64,6 +66,11 @@ abstract class LamboConfiguration
             return $array[$key];
         }
 
+        return null;
+    }
+
+    public function __get($name)
+    {
         return null;
     }
 }

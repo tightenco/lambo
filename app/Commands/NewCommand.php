@@ -9,12 +9,14 @@ use App\Actions\DisplayHelpScreen;
 use App\Actions\DisplayLamboWelcome;
 use App\Actions\EditConfigFile;
 use App\Actions\GenerateAppKey;
-use App\Actions\InitializeGitRepo;
+use App\Actions\InitializeGitHubRepository;
+use App\Actions\InitializeGitRepository;
+use App\Actions\InstallLaravel;
 use App\Actions\MigrateDatabase;
 use App\Actions\OpenInBrowser;
 use App\Actions\OpenInEditor;
+use App\Actions\PushToGitHub;
 use App\Actions\RunAfterScript;
-use App\Actions\RunLaravelInstaller;
 use App\Actions\UpgradeSavedConfiguration;
 use App\Actions\ValetLink;
 use App\Actions\ValetSecure;
@@ -59,15 +61,15 @@ class NewCommand extends LamboCommand
         );
     }
 
-    public function buildSignatureOption($option)
+    public function buildSignatureOption($option): string
     {
-        $call = isset($option['short']) ? ($option['short'] . '|' . $option['long']) : $option['long'];
+        $commandlineOption = isset($option['short']) ? ($option['short'] . '|' . $option['long']) : $option['long'];
 
         if (isset($option['param_description'])) {
-            $call .= '=';
+            $commandlineOption .= '=' . ($option['default'] ?? '');
         }
 
-        return "\n{--{$call} : {$option['cli_description']}}";
+        return "\n{--{$commandlineOption} : {$option['cli_description']}}";
     }
 
     public function handle()
@@ -95,17 +97,19 @@ class NewCommand extends LamboCommand
         $this->consoleWriter->sectionTitle("Creating a new Laravel app '{$this->argument('projectName')}'");
 
         try {
+            app(VerifyDependencies::class)();
             app(ValidateConfiguration::class)();
             app(VerifyPathAvailable::class)();
-            app(VerifyDependencies::class)();
-            app(RunLaravelInstaller::class)();
+            app(InstallLaravel::class)();
             app(CustomizeDotEnv::class)();
             app(GenerateAppKey::class)();
             app(CreateDatabase::class)();
             app(ConfigureFrontendFramework::class)();
             app(MigrateDatabase::class)();
-            app(InitializeGitRepo::class)();
+            app(InitializeGitRepository::class)();
             app(RunAfterScript::class)();
+            app(InitializeGitHubRepository::class)();
+            app(PushToGitHub::class)();
             app(ValetLink::class)();
             app(ValetSecure::class)();
             app(OpenInEditor::class)();
@@ -135,6 +139,7 @@ class NewCommand extends LamboCommand
         $commandLineConfiguration = new CommandLineConfiguration([
             'editor' => LamboConfiguration::EDITOR,
             'message' => LamboConfiguration::COMMIT_MESSAGE,
+            'branch' => LamboConfiguration::BRANCH,
             'path' => LamboConfiguration::ROOT_PATH,
             'browser' => LamboConfiguration::BROWSER,
             'frontend' => LamboConfiguration::FRONTEND_FRAMEWORK,
@@ -144,6 +149,7 @@ class NewCommand extends LamboCommand
             'dbuser' => LamboConfiguration::DATABASE_USERNAME,
             'dbpassword' => LamboConfiguration::DATABASE_PASSWORD,
             'create-db' => LamboConfiguration::CREATE_DATABASE,
+            'force' => LamboConfiguration::FORCE_CREATE,
             'migrate-db' => LamboConfiguration::MIGRATE_DATABASE,
             'link' => LamboConfiguration::VALET_LINK,
             'secure' => LamboConfiguration::VALET_SECURE,
@@ -153,12 +159,18 @@ class NewCommand extends LamboCommand
             'teams' => LamboConfiguration::TEAMS,
             'inertia' => LamboConfiguration::INERTIA,
             'livewire' => LamboConfiguration::LIVEWIRE,
+            'github' => LamboConfiguration::INITIALIZE_GITHUB,
+            'gh-public' => LamboConfiguration::GITHUB_PUBLIC,
+            'gh-description' => LamboConfiguration::GITHUB_DESCRIPTION,
+            'gh-homepage' => LamboConfiguration::GITHUB_HOMEPAGE,
+            'gh-org' => LamboConfiguration::GITHUB_ORGANIZATION,
             'projectName' => LamboConfiguration::PROJECT_NAME,
         ]);
 
         $savedConfiguration = new SavedConfiguration([
             'PROJECTPATH' => LamboConfiguration::ROOT_PATH,
             'MESSAGE' => LamboConfiguration::COMMIT_MESSAGE,
+            'BRANCH' => LamboConfiguration::BRANCH,
             'DEVELOP' => LamboConfiguration::USE_DEVELOP_BRANCH,
             'CODEEDITOR' => LamboConfiguration::EDITOR,
             'BROWSER' => LamboConfiguration::BROWSER,
@@ -186,6 +198,7 @@ class NewCommand extends LamboCommand
             LamboConfiguration::COMMAND => self::class,
             LamboConfiguration::EDITOR => 'nano',
             LamboConfiguration::COMMIT_MESSAGE => 'Initial commit',
+            LamboConfiguration::BRANCH => 'main',
             LamboConfiguration::ROOT_PATH => getcwd(),
             LamboConfiguration::BROWSER => null,
             LamboConfiguration::DATABASE_HOST => '127.0.0.1',
@@ -194,6 +207,7 @@ class NewCommand extends LamboCommand
             LamboConfiguration::DATABASE_USERNAME => 'root',
             LamboConfiguration::DATABASE_PASSWORD => '',
             LamboConfiguration::CREATE_DATABASE => false,
+            LamboConfiguration::FORCE_CREATE => false,
             LamboConfiguration::MIGRATE_DATABASE => false,
             LamboConfiguration::VALET_LINK => false,
             LamboConfiguration::VALET_SECURE => false,
@@ -203,7 +217,12 @@ class NewCommand extends LamboCommand
             LamboConfiguration::INERTIA => false,
             LamboConfiguration::LIVEWIRE => false,
             LamboConfiguration::TEAMS => false,
+            LamboConfiguration::INITIALIZE_GITHUB => false,
+            LamboConfiguration::GITHUB_PUBLIC => false,
             LamboConfiguration::PROJECT_NAME => null,
+            LamboConfiguration::GITHUB_DESCRIPTION => null,
+            LamboConfiguration::GITHUB_HOMEPAGE => null,
+            LamboConfiguration::GITHUB_ORGANIZATION => null,
             LamboConfiguration::TLD => null,
         ]);
 

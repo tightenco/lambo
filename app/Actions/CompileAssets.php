@@ -32,7 +32,7 @@ class CompileAssets
         $this->consoleWriter->success('Project assets compiled successfully.');
     }
 
-    public function extraOptions()
+    public function extraOptions(): string
     {
         return config('lambo.store.with_output') ? '' : ' --silent';
     }

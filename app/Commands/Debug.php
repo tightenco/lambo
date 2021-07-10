@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\ConsoleWriter;
 use Carbon\Carbon;
 use Dotenv\Dotenv;
 use Illuminate\Support\Arr;
@@ -12,36 +13,41 @@ trait Debug
 {
     protected function arrayToTable(array $data, array $filter = null, string $keyPrefix = '', array $headers = null): void
     {
-        if (count($data) === 0) {
-            $this->consoleWriter->text(sprintf('No saved configuration found at "%s".', config('home_dir') . '/.lambo/config'));
-            $this->consoleWriter->newLine();
-
+        if (empty($data)) {
             return;
         }
 
         $rows = collect($data)
             ->filter(function ($value, $key) use ($filter) {
-                return is_null($filter) ? true : in_array($key, $filter);
+                return is_null($filter) || in_array($key, $filter);
             })
             ->map(function ($value, $key) use ($keyPrefix) {
                 $type = gettype($value);
 
-                if ($type === 'string') {
-                    return empty($value)
-                        ? [$keyPrefix . $key, '<bg=magenta;fg=black> "" </>', $type]
-                        : [$keyPrefix . $key, '<bg=magenta;fg=black> ' . $value . ' </>', $type];
+                if (is_string($value)) {
+                    $value =  empty($value)
+                        ? ConsoleWriter::formatString('""', ConsoleWriter::BLUE)
+                        : ConsoleWriter::formatString($value, ConsoleWriter::BLUE);
                 }
 
-                if ($type === 'boolean') {
-                    return $value
-                        ? [$keyPrefix . $key, '<bg=green;fg=black> true </>', 'boolean']
-                        : [$keyPrefix . $key, '<bg=red;fg=black> false </>', 'boolean'];
+                if (is_integer($value)) {
+                    $value =  ConsoleWriter::formatString($value, ConsoleWriter::MAGENTA);
                 }
 
-                return [$keyPrefix . $key, $value, $type];
+                if (is_bool($value)) {
+                    $value =  $value
+                        ? ConsoleWriter::formatString('true', ConsoleWriter::GREEN)
+                        : ConsoleWriter::formatString('false', ConsoleWriter::RED);
+                }
+
+                if (is_null($value)) {
+                    $value = '';
+                }
+
+                return [$keyPrefix . $key, "({$type})", $value];
             })->values()->toArray();
 
-        $this->consoleWriter->table($headers ? $headers : ['key', 'value', 'type'], $rows);
+        $this->consoleWriter->table($headers ?: ['key', 'type', 'value'], $rows);
     }
 
     protected function debugReport(): void
@@ -133,10 +139,23 @@ trait Debug
     protected function configToTable(): void
     {
         $config = Arr::prepend(config('lambo.store'), config('home_dir'), 'home_dir');
-        $this->arrayToTable($config, null, 'lambo.store.', ['Configuration key', 'Value', 'Type']);
+        $this->arrayToTable($this->dotFlatten('lambo.store', $config));
     }
 
-    protected function logTimezoneData(string $offset = null)
+    private function dotFlatten($prefix, $array): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result = array_merge($result, $this->dotFlatten($prefix . '.' . $key, $value));
+            } else {
+                $result[$prefix . '.' . $key] = $value;
+            }
+        }
+        return $result;
+    }
+
+    protected function logTimezoneData()
     {
         $this->consoleWriter->sectionTitle('Timezone configuration');
         $this->consoleWriter->newLine();

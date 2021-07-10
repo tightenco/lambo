@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\OpenInBrowser;
+use App\Environment;
 use App\Shell;
 use Tests\TestCase;
 
@@ -13,7 +14,7 @@ class OpenInBrowserTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->environment = $this->mock('alias:App\Environment');
+        $this->environment = $this->mock(Environment::class);
     }
 
     /** @test */

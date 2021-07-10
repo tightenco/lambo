@@ -5,7 +5,7 @@ namespace App\Actions;
 use App\ConsoleWriter;
 use App\Shell;
 
-class InitializeGitRepo
+class InitializeGitRepository
 {
     use AbortsCommands;
 
@@ -22,9 +22,19 @@ class InitializeGitRepo
     {
         $this->consoleWriter->logStep('Initializing git repository');
 
-        $this->exec("git init{$this->withQuiet()}");
+        $this->exec(sprintf(
+            'git init%s%s',
+            config('lambo.store.with_output') ? '' : ' --quiet',
+            $this->getBranchOption()
+        ));
+
         $this->exec('git add .');
-        $this->exec(sprintf('git commit%s -m "%s"', $this->withQuiet(), config('lambo.store.commit_message')));
+
+        $this->exec(sprintf(
+            "git commit%s -m '%s'",
+            config('lambo.store.with_output') ? '' : ' --quiet',
+            config('lambo.store.commit_message')
+        ));
 
         $this->consoleWriter->success('New git repository initialized.');
     }
@@ -35,8 +45,8 @@ class InitializeGitRepo
         $this->abortIf(! $process->isSuccessful(), 'Initialization of git repository did not complete successfully.', $process);
     }
 
-    private function withQuiet()
+    private function getBranchOption(): string
     {
-        return config('lambo.store.with_output') ? '' : ' --quiet';
+        return config('lambo.store.branch') ? ' --initial-branch=' . config('lambo.store.branch') : '';
     }
 }

@@ -6,54 +6,44 @@ use App\Options;
 
 class DisplayHelpScreen
 {
-    protected $indent = 30;
-
-    protected $commands = [
-        'help' => 'Display this screen',
-        'edit-config' => 'Edit config file',
-        'edit-after' => 'Edit "after" file',
-    ];
-
     public function __invoke()
     {
-        app('console-writer')->newLine();
-        app('console-writer')->text('<comment>Usage:</comment>');
-        app('console-writer')->text("  lambo new myApplication [arguments]\n");
-        app('console-writer')->text('<comment>Commands (lambo COMMANDNAME):</comment>');
-
-        foreach ($this->commands as $command => $description) {
-            $spaces = $this->makeSpaces(strlen($command));
-            app('console-writer')->text("  <info>{$command}</info>{$spaces}{$description}");
-        }
-
-        app('console-writer')->newLine();
-        app('console-writer')->text('<comment>Options (lambo new myApplication OPTIONS):</comment>');
-
-        foreach ((new Options())->all() as $option) {
-            app('console-writer')->text($this->createCliStringForOption($option));
-        }
+        app('console-writer')->text("\n <comment>Usage:</comment>{$this->createCliStringForCommandUsage()}");
+        app('console-writer')->text("\n <comment>Options (lambo new myApplication):</comment>{$this->createCliStringForOptionDescriptions()}");
     }
 
-    public function createCliStringForOption($option)
+    public function createCliStringForOptionDescriptions(): string
     {
-        if (isset($option['short'])) {
-            $flag = '-' . $option['short'] . ', --' . $option['long'];
-        } else {
-            $flag = '    --' . $option['long'];
-        }
+        return collect((new Options())->all())->reduce(function ($carry, $option) {
+            $flag = isset($option['short'])
+                ? '-' . $option['short'] . ', --' . $option['long']
+                : '    --' . $option['long'];
 
-        if (isset($option['param_description'])) {
-            $flag .= '=' . $option['param_description'];
-        }
+            $flag .= isset($option['param_description'])
+                ? "={$option['param_description']}"
+                : '';
 
-        $spaces = $this->makeSpaces(strlen($flag));
-        $description = $option['cli_description'];
-
-        return "  <info>{$flag}</info>{$spaces}{$description}";
+            return $carry . sprintf("\n   <info>%-33s</info>%s", $flag, $option['cli_description']);
+        });
     }
 
-    public function makeSpaces($count)
+    private function createCliStringForCommandUsage(): string
     {
-        return str_repeat(' ', $this->indent - $count);
+        return collect([
+            [
+                'usage' => 'lambo edit-config [--editor=<editor>]',
+                'description' => 'Create or edit your <comment>~/.lambo/config</comment> file',
+            ],
+            [
+                'usage' => 'lambo edit-after [--editor=<editor>]',
+                'description' => 'Create or edit your <comment>~/.lambo/after</comment> file',
+            ],
+            [
+                'usage' => 'lambo new myApplication [options]',
+                'description' => 'Scaffold a new Laravel application',
+            ],
+        ])->reduce(function ($carry, $command) {
+                return $carry . sprintf("\n   <info>%-40s</info> %s", $command['usage'], $command['description']);
+        });
     }
 }

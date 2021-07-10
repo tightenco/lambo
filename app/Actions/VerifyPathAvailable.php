@@ -18,7 +18,7 @@ class VerifyPathAvailable
         $rootPath = config('lambo.store.root_path');
 
         if (! File::isDirectory($rootPath)) {
-            throw new LamboException($rootPath . ' is not a directory.');
+            throw new LamboException("{$rootPath} is not a directory.");
         }
 
         $projectPath = config('lambo.store.project_path');
@@ -28,9 +28,15 @@ class VerifyPathAvailable
         }
 
         if (File::isDirectory($projectPath)) {
-            throw new LamboException($projectPath . ' is already a directory.');
+            if (! config('lambo.store.force_create')) {
+                throw new LamboException("{$projectPath} is already a directory.");
+            }
+
+            if (! File::deleteDirectory($projectPath)) {
+                throw new LamboException("{$projectPath} is already a directory and, although the force option was specified, deletion failed.");
+            }
         }
 
-        app('console-writer')->success(sprintf('Directory "%s" is available.', config('lambo.store.project_path')));
+        app('console-writer')->success("Directory '{$projectPath}' is available.");
     }
 }

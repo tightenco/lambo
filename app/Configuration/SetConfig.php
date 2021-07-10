@@ -63,16 +63,16 @@ class SetConfig
 
     private function get(string $configurationKey, $default)
     {
-        if ($configuration = $this->commandLineConfiguration->$configurationKey) {
-            return $configuration;
+        if (isset($this->commandLineConfiguration->$configurationKey)) {
+            return $this->commandLineConfiguration->$configurationKey;
         }
 
-        if ($configuration = $this->savedConfiguration->$configurationKey) {
-            return $configuration;
+        if (isset($this->savedConfiguration->$configurationKey)) {
+            return $this->savedConfiguration->$configurationKey;
         }
 
-        if ($configuration = $this->shellConfiguration->$configurationKey) {
-            return $configuration;
+        if (isset($this->shellConfiguration->$configurationKey)) {
+            return $this->shellConfiguration->$configurationKey;
         }
 
         return $default;

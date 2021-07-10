@@ -43,18 +43,31 @@ class Shell
             ->enableOutput();
 
         $this->consoleWriter->exec($command);
+        $this->consoleWriter->newLine();
 
         $process->run(function ($type, $buffer) {
             if (empty(trim($buffer)) || $buffer === PHP_EOL) {
                 return;
             }
-
             foreach (explode(PHP_EOL, trim($buffer)) as $line) {
                 $this->consoleWriter->consoleOutput($line, $type);
             }
         });
 
+        $this->consoleWriter->newLine();
+
         $this->useTTY = false;
+        return $process;
+    }
+
+    public function execQuietly(string $command)
+    {
+        $process =  Process::fromShellCommandline($command)
+            ->setTimeout(null)
+            ->enableOutput();
+
+        $process->run();
+
         return $process;
     }
 

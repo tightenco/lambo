@@ -12,7 +12,7 @@
 #
 # 1. Comment out the following in app/Commands/NewCommand:
 #    app(VerifyPathAvailable::class)()
-#    app(RunLaravelInstaller::class)()
+#    app(InstallLaravel::class)()
 #
 # 2. run this script passing any regular lambo flags and/or options while
 #    omitting new, Example:
@@ -82,4 +82,7 @@ cd $TEST_DIR
 echo $PROJECT_PATH > .last-run
 
 cd $SCRIPT_PATH
+echo "✅ Running Lambo…"
+echo
+echo "lambo new $NAME --path $TEST_DIR $*"
 ../lambo new $NAME --path $TEST_DIR $*

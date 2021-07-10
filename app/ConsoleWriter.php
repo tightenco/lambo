@@ -7,6 +7,16 @@ use Symfony\Component\Process\Process;
 
 class ConsoleWriter extends OutputStyle
 {
+    public const BLUE = 'fg=blue';
+    public const GREEN = 'fg=green';
+    public const RED = 'fg=red';
+    public const MAGENTA = 'fg=magenta';
+
+    public static function formatString(string $string, string $format): string
+    {
+        return "<{$format}>{$string}</>";
+    }
+
     public function panel(string $prefix, string $message, string $style)
     {
         parent::block($message, $prefix, $style, ' ', true, false);
@@ -38,7 +48,7 @@ class ConsoleWriter extends OutputStyle
 
     public function ok($message): void
     {
-        $this->success($message, ' OK ');
+        $this->success($message, 'OK');
     }
 
     public function note($message, $label = 'NOTE'): void
@@ -49,6 +59,29 @@ class ConsoleWriter extends OutputStyle
     public function warn($message, $label = 'WARN'): void
     {
         $this->labeledLine($label, "<fg=red;bg=default>{$message}</>", 'fg=black;bg=red');
+    }
+
+    public function warnCommandFailed($command): void
+    {
+        $this->warn("Failed to run {$command}");
+    }
+
+    public function showOutputErrors(string $errors)
+    {
+        parent::text([
+            '<fg=red;bg=default>--------------------------------------------------------------------------------',
+            str_replace(PHP_EOL, PHP_EOL . ' ', trim($errors)),
+            '--------------------------------------------------------------------------------</>',
+        ]);
+    }
+
+    public function showOutput(string $errors)
+    {
+        parent::text([
+            '--------------------------------------------------------------------------------',
+            str_replace(PHP_EOL, PHP_EOL . ' ', trim($errors)),
+            '--------------------------------------------------------------------------------',
+        ]);
     }
 
     public function exception($message)
@@ -80,16 +113,16 @@ class ConsoleWriter extends OutputStyle
     {
         if (config('lambo.store.with_output')) {
             ($type === Process::ERR)
-                ? $this->labeledLine('!', "<fg=yellow>{$line}</>", 'bg=yellow;fg=black', 3)
-                : $this->labeledLine('✓', "{$line}", 'bg=blue;fg=black', 3);
+                ? $this->labeledLine('!️', '┃ ' . $line, 'fg=yellow')
+                : $this->labeledLine('✓︎', '┃ ' . $line, 'fg=green;');
         }
     }
 
-    private function labeledLine(string $label, string $message, string $labelFormat = 'fg=default;bg=default', int $indent = 0): void
+    public function labeledLine(string $label, string $message, string $labelFormat = 'fg=default;bg=default', int $indentColumns = 0): void
     {
-        $indentString = str_repeat(' ', $indent);
+        $indent = str_repeat(' ', $indentColumns);
         $this->isDecorated()
-            ? parent::text("{$indentString}<{$labelFormat}> {$label} </> {$message}")
-            : parent::text("{$indentString}[{$label}] {$message}");
+            ? parent::text("{$indent}<{$labelFormat}> {$label} </> {$message}")
+            : parent::text("{$indent}[ {$label} ] {$message}");
     }
 }

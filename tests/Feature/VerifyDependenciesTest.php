@@ -18,32 +18,40 @@ class VerifyDependenciesTest extends TestCase
     }
 
     /** @test */
-    function it_checks_that_required_dependencies_are_available()
+    function it_checks_that_dependencies_are_available()
     {
-        $this->executableFinder
-            ->shouldReceive('find')
-            ->with('laravel')
-            ->andReturn('/path/to/laravel');
-
-        $this->executableFinder
-            ->shouldReceive('find')
-            ->with('valet')
-            ->andReturn('/path/to/valet');
-
-        $this->executableFinder
-            ->shouldReceive('find')
-            ->with('git')
-            ->andReturn('/path/to/git');
+        foreach (['composer', 'valet', 'git', 'hub', 'gh'] as $dependency) {
+            $this->dependencyIsAvailable($dependency);
+        }
 
         app(VerifyDependencies::class)();
+        $this->assertTrue(config('lambo.store.tools.gh'));
+        $this->assertTrue(config('lambo.store.tools.hub'));
     }
 
     /** @test */
-    function it_throws_a_lambo_exception_if_laravel_is_missing()
+    function it_marks_optional_dependencies_as_missing()
     {
-        $this->dependencyIsMissing('laravel');
-        $this->dependencyIsAvailable('valet');
-        $this->dependencyIsAvailable('git');
+        foreach (['composer', 'valet', 'git'] as $dependency) {
+            $this->dependencyIsAvailable($dependency);
+        }
+
+        $this->dependencyIsMissing('gh');
+        $this->dependencyIsMissing('hub');
+
+        app(VerifyDependencies::class)();
+        $this->assertFalse(config('lambo.store.tools.gh'));
+        $this->assertFalse(config('lambo.store.tools.hub'));
+    }
+
+    /** @test */
+    function it_throws_a_lambo_exception_if_composer_is_missing()
+    {
+        foreach (['valet', 'git', 'hub', 'gh'] as $dependency) {
+            $this->dependencyIsAvailable($dependency);
+        }
+
+        $this->dependencyIsMissing('composer');
 
         $this->expectException(LamboException::class);
 
@@ -53,9 +61,11 @@ class VerifyDependenciesTest extends TestCase
     /** @test */
     function it_throws_a_lambo_exception_if_valet_is_missing()
     {
-        $this->dependencyIsAvailable('laravel');
+        foreach (['composer', 'git', 'hub', 'gh'] as $dependency) {
+            $this->dependencyIsAvailable($dependency);
+        }
+
         $this->dependencyIsMissing('valet');
-        $this->dependencyIsAvailable('git');
 
         $this->expectException(LamboException::class);
 
@@ -65,8 +75,10 @@ class VerifyDependenciesTest extends TestCase
     /** @test */
     function it_throws_a_lambo_exception_if_git_is_missing()
     {
-        $this->dependencyIsAvailable('laravel');
-        $this->dependencyIsAvailable('valet');
+        foreach (['composer', 'valet', 'hub', 'gh'] as $dependency) {
+            $this->dependencyIsAvailable($dependency);
+        }
+
         $this->dependencyIsMissing('git');
 
         $this->expectException(LamboException::class);
